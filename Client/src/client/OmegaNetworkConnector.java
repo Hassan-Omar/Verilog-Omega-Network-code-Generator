@@ -12,14 +12,12 @@ public class OmegaNetworkConnector {
       String header="module OmegaNetwork(input ["+(n-1)+":0] InDat, input CLK, output ["+(n-1)+":0]  outData);\r\n";
       String wires="";
       String instancBlocks="";
-      String continusAssign="";
       // stores number of satages and number of switches per stage
       int switshesPerStage = n/2;
       int stagesNumber = log2(n);
       // 
       int counter=0; 
-      int downCounter=n-1;
-      
+       
       for(int k=0; k<stagesNumber; k++)
       {// outer loop for stages
           for(int i=0; i<switshesPerStage; i++)
@@ -27,26 +25,29 @@ public class OmegaNetworkConnector {
               // for each Banyan I need 4 wires X1,X2 -> INPUT , Y1,Y2 -> OUTPUT
               //wires+="    "+"wire W"+i+"S"+k+"X1;"+"\r\n";
               //wires+="    "+"wire W"+i+"S"+k+"X2;"+"\r\n";
-              wires+="    "+"wire W"+"S"+k+"_"+counter+";"+"\r\n";
-              wires+="    "+"wire W"+"S"+k+"_"+(counter+1)+";"+"\r\n";
+              if(k<stagesNumber-1)
+              {
+                 wires+="    "+"wire W"+"S"+k+"_"+counter+";"+"\r\n";
+                 wires+="    "+"wire W"+"S"+k+"_"+(counter+1)+";"+"\r\n";
+              }
               //______________________
-              String temp = mapPorts(n,k,counter,downCounter);
-              counter++;downCounter--;
-              temp+= mapPorts(n,k,counter,downCounter);
-              counter++;downCounter--;
+              String temp = mapPorts(n,k,counter);
+              counter++;
+              temp+= mapPorts(n,k,counter);
+              counter++;
               if(k<stagesNumber-1)
                  instancBlocks+="    "+"Banyan2_2 ins_Banyn"+i+"_"+k+"("+temp+"W"+"S"+k+"_"+(counter-2)+", "+"W"+"S"+k+"_"+(counter-1)+", CLK);"+"\r\n";
               else
-                 instancBlocks+="    "+"Banyan2_2 ins_Banyn"+i+"_"+k+"("+temp+"outData["+(downCounter+2)+"], outData["+(downCounter+1)+"], CLK);"+"\r\n";
+                 instancBlocks+="    "+"Banyan2_2 ins_Banyn"+i+"_"+k+"("+temp+"outData["+(counter-2)+"], outData["+(counter-1)+"], CLK);"+"\r\n";
            } // end of inner loop
           counter=0;
-          downCounter=n-1;
+    
       } // end of outer loop
       
       scriptWriterTofile(header+wires+instancBlocks+"endmodule");
   }
 //+++++++++++++++++++++++++++++++++++++++
-  private String mapPorts(int n,int k,int counter, int downCounter)
+  private String mapPorts(int n,int k,int counter)
   { 
       int mapNum;
       // check if n is even or odd
@@ -62,7 +63,7 @@ public class OmegaNetworkConnector {
       
       if(k==0)
       { 
-          result+="InDat["+downCounter+"], ";
+          result+="InDat["+mapNum+"], ";
 
       }
       else
